@@ -42,7 +42,7 @@ git tag v0.2.0 && git push --tags
 
 ## Совместимость / Compatibility
 
-- Foundry VTT: v12–v13 (ApplicationV2 + HandlebarsApplicationMixin).
+- Foundry VTT: v12–v14 (ApplicationV2 + HandlebarsApplicationMixin).
 - Системы: любые с dnd5e-подобной структурой `system.currency`; для прочих систем предметы раздаются, а по золоту выводится предупреждение.
 
 ## Roadmap

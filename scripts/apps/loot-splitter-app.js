@@ -121,7 +121,9 @@ export class LootSplitterApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
   /** Handle an item dropped into the window. */
   async _onDrop(event) {
-    const data = TextEditor.getDragEventData(event);
+    // In v13+ TextEditor lives under foundry.applications.ux; keep the global alias as fallback.
+    const TextEditorImpl = foundry.applications?.ux?.TextEditor?.implementation ?? TextEditor;
+    const data = TextEditorImpl.getDragEventData(event);
     if (data?.type !== "Item") return;
     const item = await getDocumentClass("Item").fromDropData(data);
     if (!item) return;
@@ -257,7 +259,8 @@ export class LootSplitterApp extends HandlebarsApplicationMixin(ApplicationV2) {
       content
     };
     if (game.settings.get(MODULE_ID, "logMode") === "gm") {
-      messageData.whisper = ChatMessage.getWhisperRecipients("GM");
+      // ChatMessage.getWhisperRecipients is deprecated; collect GM ids directly (v13/v14-safe).
+      messageData.whisper = game.users.filter((u) => u.isGM).map((u) => u.id);
     }
     await ChatMessage.create(messageData);
   }

@@ -2,7 +2,7 @@
   "id": "loot-splitter",
   "title": "Loot Splitter — Делёж добычи",
   "description": "Распределение добычи и золота между персонажами игроков с логированием в чат. / Split loot and gold between player characters with chat logging.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "authors": [
     {
       "name": "Guvatara",
@@ -13,8 +13,8 @@
   "manifest": "https://github.com/guvatara/foundryvtt-loot-splitter/releases/latest/download/module.json",
   "compatibility": {
     "minimum": "12",
-    "verified": "13",
-    "maximum": "13"
+    "verified": "14",
+    "maximum": "14"
   },
   "esmodules": ["scripts/loot-splitter.js"],
   "styles": ["styles/loot-splitter.css"],
