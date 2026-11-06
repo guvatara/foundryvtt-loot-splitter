@@ -18,15 +18,19 @@ A [Foundry VTT](https://foundryvtt.com) module: the GM drags items into the modu
 
 ## Установка / Installation
 
-**Через манифест (черновой способ для разработки):**
-
 В Foundry VTT: *Add-on Modules → Install Module → Manifest URL*:
 
 ```
-https://raw.githubusercontent.com/guvatara/foundryvtt-loot-splitter/main/module.json
+https://github.com/guvatara/foundryvtt-loot-splitter/releases/latest/download/module.json
 ```
 
-> Рекомендуемый способ с релизами (`download` + версионирование) будет добавлен позже.
+Обновления приходят автоматически при выходе нового релиза. Альтернатива для разработки — манифест из ветки `main`: `https://raw.githubusercontent.com/guvatara/foundryvtt-loot-splitter/main/module.json`.
+
+**Как выпустить новую версию:** поставьте тег и запушьте его — GitHub Actions соберёт `module.zip`, проставит версию и `download` в `module.json` и опубликует релиз:
+
+```bash
+git tag v0.2.0 && git push --tags
+```
 
 ## Использование / Usage
 
@@ -43,7 +47,7 @@ https://raw.githubusercontent.com/guvatara/foundryvtt-loot-splitter/main/module.
 
 ## Roadmap
 
-- [ ] Релизный пайплайн (GitHub Actions, `download` в манифесте).
+- [x] Релизный пайплайн (GitHub Actions, `download` в манифесте).
 - [ ] Делёж с весами/долями (например, «полпайки» NPC-гуиду).
 - [ ] История дележей в журнале мира.
 - [ ] Поддержка нескольких номиналов валюты за раз.

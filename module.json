@@ -10,7 +10,7 @@
     }
   ],
   "url": "https://github.com/guvatara/foundryvtt-loot-splitter",
-  "manifest": "https://raw.githubusercontent.com/guvatara/foundryvtt-loot-splitter/main/module.json",
+  "manifest": "https://github.com/guvatara/foundryvtt-loot-splitter/releases/latest/download/module.json",
   "compatibility": {
     "minimum": "12",
     "verified": "13",

@@ -1,0 +1,48 @@
+name: Release
+
+# Push a version tag (e.g. `git tag v0.2.0 && git push --tags`) to cut a release.
+# The workflow stamps module.json with the tag version + download URL,
+# packs module.zip, and publishes a GitHub Release with both as assets.
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Extract version from tag
+        id: version
+        run: echo "version=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
+
+      - name: Stamp module.json with version and download URL
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          REPO="${{ github.repository }}"
+          jq --arg v "$VERSION" \
+             --arg download "https://github.com/$REPO/releases/download/v$VERSION/module.zip" \
+             '.version = $v | .download = $download' \
+             module.json > module.stamped.json
+          mv module.stamped.json module.json
+
+      - name: Pack module.zip
+        run: |
+          mkdir -p package/loot-splitter
+          cp -r module.json scripts styles templates lang LICENSE README.md package/loot-splitter/
+          cd package && zip -r ../module.zip loot-splitter
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            module.zip
+            module.json
+          generate_release_notes: true
