@@ -93,6 +93,18 @@
   border-radius: 4px;
 }
 
+#loot-splitter .participant-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#loot-splitter .participant-share {
+  flex: 0 0 4rem;
+  text-align: center;
+}
+
 #loot-splitter .loot-footer {
   justify-content: flex-end;
   gap: 0.5rem;

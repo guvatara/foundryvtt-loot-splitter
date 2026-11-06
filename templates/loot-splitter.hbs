@@ -48,7 +48,10 @@
     <label class="participant flexrow">
       <input type="checkbox" data-participant="{{this.id}}" {{checked this.selected}}>
       <img class="participant-img" src="{{this.img}}" alt="">
-      <span>{{this.name}}</span>
+      <span class="participant-name">{{this.name}}</span>
+      <input type="number" class="participant-share" data-share="{{this.id}}"
+             value="{{this.share}}" min="0" step="0.5"
+             title="{{localize 'LOOT_SPLITTER.App.Share'}}">
     </label>
     {{/each}}
   </fieldset>

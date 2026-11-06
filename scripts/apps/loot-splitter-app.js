@@ -97,6 +97,13 @@ export class LootSplitterApp extends HandlebarsApplicationMixin(ApplicationV2) {
         if (item) item.assigned = sel.value;
       })
     );
+
+    root.querySelectorAll("[data-share]").forEach((inp) =>
+      inp.addEventListener("change", () => {
+        const p = this.participants.find((x) => x.id === inp.dataset.share);
+        if (p) p.share = Math.max(0, Number(inp.value) || 0);
+      })
+    );
   }
 
   /**
@@ -106,13 +113,17 @@ export class LootSplitterApp extends HandlebarsApplicationMixin(ApplicationV2) {
   #refreshParticipants() {
     let actors = game.actors.filter((a) => a.hasPlayerOwner && a.type === "character");
     if (!actors.length) actors = game.actors.filter((a) => a.hasPlayerOwner);
-    const previous = new Map(this.participants.map((p) => [p.id, p.selected]));
-    this.participants = actors.map((a) => ({
-      id: a.id,
-      name: a.name,
-      img: a.img,
-      selected: previous.has(a.id) ? previous.get(a.id) : true
-    }));
+    const previous = new Map(this.participants.map((p) => [p.id, { selected: p.selected, share: p.share }]));
+    this.participants = actors.map((a) => {
+      const prev = previous.get(a.id);
+      return {
+        id: a.id,
+        name: a.name,
+        img: a.img,
+        selected: prev ? prev.selected : true,
+        share: prev ? prev.share : 1
+      };
+    });
   }
 
   /* ------------------------------------------ */
@@ -165,36 +176,54 @@ export class LootSplitterApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
     const denom = game.settings.get(MODULE_ID, "currencyDenomination");
 
+    /** Recipients with a positive share — the only ones who earn gold. */
+    const earners = participants.filter((p) => p.share > 0);
+    if (!earners.length) {
+      return ui.notifications.warn(game.i18n.localize("LOOT_SPLITTER.Warnings.NoShares"));
+    }
+
     /** @type {Map<string, {actor: Actor, gold: number, items: object[]}>} */
     const assignments = new Map(
       participants.map((p) => [p.id, { actor: game.actors.get(p.id), gold: 0, items: [] }])
     );
 
-    // --- Gold: split evenly, remainder coins go one-by-one from the top.
+    // --- Gold: proportional to shares; remainder goes by largest fractional part.
     if (this.gold > 0) {
-      const share = Math.floor(this.gold / participants.length);
-      let remainder = this.gold - share * participants.length;
-      for (const p of participants) {
-        let g = share;
-        if (remainder > 0) {
-          g += 1;
-          remainder -= 1;
-        }
-        assignments.get(p.id).gold = g;
-      }
+      const totalShares = earners.reduce((s, p) => s + p.share, 0);
+      const exact = earners.map((p) => (this.gold * p.share) / totalShares);
+      const base = exact.map(Math.floor);
+      const remainder = this.gold - base.reduce((a, b) => a + b, 0);
+      const byFraction = exact
+        .map((v, i) => ({ i, frac: v - base[i] }))
+        .sort((a, b) => b.frac - a.frac);
+      for (let k = 0; k < remainder; k++) base[byFraction[k % byFraction.length].i] += 1;
+      earners.forEach((p, i) => {
+        assignments.get(p.id).gold = base[i];
+      });
     }
 
-    // --- Items: round-robin in "even" mode, per-item choice in "manual".
-    this.items.forEach((entry, index) => {
-      let targetId;
-      if (this.mode === "manual") {
+    // --- Items: smooth weighted round-robin in "even" mode (zero-share
+    // participants get nothing), per-item choice in "manual".
+    if (this.mode === "manual") {
+      this.items.forEach((entry) => {
         const valid = entry.assigned && participants.some((p) => p.id === entry.assigned);
-        targetId = valid ? entry.assigned : participants[0].id;
-      } else {
-        targetId = participants[index % participants.length].id;
+        const targetId = valid ? entry.assigned : participants[0].id;
+        assignments.get(targetId).items.push(entry);
+      });
+    } else {
+      const totalShares = earners.reduce((s, p) => s + p.share, 0);
+      const current = new Map(earners.map((p) => [p.id, 0]));
+      for (const entry of this.items) {
+        let bestId = null;
+        for (const p of earners) {
+          const v = current.get(p.id) + p.share;
+          current.set(p.id, v);
+          if (bestId === null || v > current.get(bestId)) bestId = p.id;
+        }
+        current.set(bestId, current.get(bestId) - totalShares);
+        assignments.get(bestId).items.push(entry);
       }
-      assignments.get(targetId).items.push(entry);
-    });
+    }
 
     // --- Apply the changes.
     for (const [, a] of assignments) {

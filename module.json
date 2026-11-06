@@ -2,7 +2,7 @@
   "id": "loot-splitter",
   "title": "Loot Splitter — Делёж добычи",
   "description": "Распределение добычи и золота между персонажами игроков с логированием в чат. / Split loot and gold between player characters with chat logging.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "authors": [
     {
       "name": "Guvatara",

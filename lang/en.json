@@ -10,7 +10,8 @@
       "Distribute": "Distribute",
       "Clear": "Clear",
       "Remove": "Remove item",
-      "AssignTo": "Assign to"
+      "AssignTo": "Assign to",
+      "Share": "Share (0 = gets nothing)"
     },
     "Mode": {
       "Even": "Split evenly between everyone",
@@ -26,6 +27,7 @@
     "Warnings": {
       "NoParticipants": "Select at least one recipient.",
       "NothingToDistribute": "Add items or gold first.",
+      "NoShares": "At least one recipient must have a share greater than zero.",
       "NoCurrency": "{{name}} has no currency field — gold was not added.",
       "OnlyGM": "Only the GM can split loot."
     },
