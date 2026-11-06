@@ -222,7 +222,18 @@ export class LootSplitterApp extends HandlebarsApplicationMixin(ApplicationV2) {
       }
     }
 
-    await this.#logDistribution(assignments, denom);
+    // --- Log: chat + journal history.
+    // NB: actions are invoked with this = app instance, so static private
+    // helpers must be called through the class name (this.#x would TypeError).
+    const content = LootSplitterApp.#buildLogContent(assignments, denom);
+    await LootSplitterApp.#postChatLog(content);
+    if (game.settings.get(MODULE_ID, "historyLog")) {
+      try {
+        await LootSplitterApp.#logToJournal(content);
+      } catch (err) {
+        console.warn(`${MODULE_ID} | Failed to write journal history`, err);
+      }
+    }
 
     this.items = [];
     this.gold = 0;
@@ -230,10 +241,11 @@ export class LootSplitterApp extends HandlebarsApplicationMixin(ApplicationV2) {
   }
 
   /* ------------------------------------------ */
-  /*  Chat log                                   */
+  /*  Logging (chat + journal)                   */
   /* ------------------------------------------ */
 
-  static async #logDistribution(assignments, denom) {
+  /** Build the shared HTML summary of a distribution. */
+  static #buildLogContent(assignments, denom) {
     const entries = [];
     for (const [, a] of assignments) {
       if (!a.actor) continue;
@@ -248,12 +260,15 @@ export class LootSplitterApp extends HandlebarsApplicationMixin(ApplicationV2) {
       );
     }
 
-    const content = `
+    return `
       <div class="loot-splitter-log">
         <h3><i class="fas fa-coins"></i> ${game.i18n.localize("LOOT_SPLITTER.Chat.Header")}</h3>
         ${entries.join("")}
       </div>`;
+  }
 
+  /** Post the distribution summary to the chat. */
+  static async #postChatLog(content) {
     const messageData = {
       speaker: { alias: game.i18n.localize("LOOT_SPLITTER.Chat.Alias") },
       content
@@ -269,5 +284,30 @@ export class LootSplitterApp extends HandlebarsApplicationMixin(ApplicationV2) {
       }
     }
     await ChatMessage.create(messageData, createOptions);
+  }
+
+  /**
+   * Append the distribution summary to the world journal.
+   * The journal entry is located (or lazily created) by a module flag;
+   * every distribution becomes a separate page named by timestamp.
+   */
+  static async #logToJournal(content) {
+    let journal = game.journal.find((j) => j.getFlag(MODULE_ID, "isHistoryLog"));
+    if (!journal) {
+      journal = await JournalEntry.create({
+        name: game.i18n.localize("LOOT_SPLITTER.Journal.Name"),
+        flags: { [MODULE_ID]: { isHistoryLog: true } }
+      });
+    }
+    if (!journal) return;
+
+    const format = CONST.JOURNAL_ENTRY_PAGE_FORMATS?.HTML ?? 1;
+    await journal.createEmbeddedDocuments("JournalEntryPage", [
+      {
+        name: new Date().toLocaleString(),
+        type: "text",
+        text: { content, format }
+      }
+    ]);
   }
 }

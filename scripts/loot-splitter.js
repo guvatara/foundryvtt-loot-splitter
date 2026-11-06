@@ -29,6 +29,15 @@ Hooks.once("init", () => {
     default: "gp"
   });
 
+  game.settings.register(MODULE_ID, "historyLog", {
+    name: "LOOT_SPLITTER.Settings.HistoryLog.Name",
+    hint: "LOOT_SPLITTER.Settings.HistoryLog.Hint",
+    scope: "world",
+    config: true,
+    type: Boolean,
+    default: true
+  });
+
   registerLootCommand();
 });
 

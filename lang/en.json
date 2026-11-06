@@ -39,7 +39,14 @@
       "Denomination": {
         "Name": "Currency denomination",
         "Hint": "Currency key in actor data used for gold (for dnd5e: gp, pp, ep, sp, cp)."
+      },
+      "HistoryLog": {
+        "Name": "Journal history",
+        "Hint": "Append every distribution to a world journal entry (a page per distribution, timestamped)."
       }
+    },
+    "Journal": {
+      "Name": "Loot Splitter — History"
     }
   }
 }
