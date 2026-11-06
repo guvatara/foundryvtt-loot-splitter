@@ -1,20 +1,23 @@
 const MODULE_ID = "loot-splitter";
 
+/** dnd5e-style currency denominations, high to low. */
+const CURRENCY_DENOMS = ["pp", "gp", "ep", "sp", "cp"];
+
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
 /**
  * Loot Splitter window.
  *
- * The GM drags items and enters a gold amount, picks the recipient
+ * The GM drags items and enters currency amounts, picks the recipient
  * characters, and the module hands out the loot — evenly or by manual
- * assignment — and writes a summary to the chat log.
+ * assignment — and writes a summary to the chat log and world journal.
  */
 export class LootSplitterApp extends HandlebarsApplicationMixin(ApplicationV2) {
   /** Items dropped into the window: {id, uuid, name, img, data, assigned}. */
   items = [];
 
-  /** Gold to split. */
-  gold = 0;
+  /** Currency to split, per denomination: {pp, gp, ep, sp, cp}. */
+  currency = Object.fromEntries(CURRENCY_DENOMS.map((d) => [d, 0]));
 
   /** Distribution mode: "even" | "manual". */
   mode = "even";
@@ -55,7 +58,7 @@ export class LootSplitterApp extends HandlebarsApplicationMixin(ApplicationV2) {
     const selected = this.participants.filter((p) => p.selected);
     return {
       items: this.items,
-      gold: this.gold,
+      currencyFields: CURRENCY_DENOMS.map((d) => ({ key: d, value: this.currency[d] })),
       mode: this.mode,
       modeChoices: {
         even: game.i18n.localize("LOOT_SPLITTER.Mode.Even"),
@@ -74,9 +77,11 @@ export class LootSplitterApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
     root.addEventListener("submit", (ev) => ev.preventDefault());
 
-    root.querySelector('[name="gold"]')?.addEventListener("change", (ev) => {
-      this.gold = Math.max(0, Math.floor(Number(ev.target.value) || 0));
-    });
+    root.querySelectorAll("[data-currency]").forEach((inp) =>
+      inp.addEventListener("change", () => {
+        this.currency[inp.dataset.currency] = Math.max(0, Math.floor(Number(inp.value) || 0));
+      })
+    );
 
     root.querySelector('[name="mode"]')?.addEventListener("change", (ev) => {
       this.mode = ev.target.value === "manual" ? "manual" : "even";
@@ -161,7 +166,7 @@ export class LootSplitterApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
   static #onClearAll(_event, _target) {
     this.items = [];
-    this.gold = 0;
+    this.currency = Object.fromEntries(CURRENCY_DENOMS.map((d) => [d, 0]));
     this.render();
   }
 
@@ -170,35 +175,37 @@ export class LootSplitterApp extends HandlebarsApplicationMixin(ApplicationV2) {
     if (!participants.length) {
       return ui.notifications.warn(game.i18n.localize("LOOT_SPLITTER.Warnings.NoParticipants"));
     }
-    if (!this.items.length && this.gold <= 0) {
+    const totalCurrency = CURRENCY_DENOMS.reduce((s, d) => s + (this.currency[d] || 0), 0);
+    if (!this.items.length && totalCurrency <= 0) {
       return ui.notifications.warn(game.i18n.localize("LOOT_SPLITTER.Warnings.NothingToDistribute"));
     }
 
-    const denom = game.settings.get(MODULE_ID, "currencyDenomination");
-
-    /** Recipients with a positive share — the only ones who earn gold. */
+    /** Recipients with a positive share — the only ones who earn currency. */
     const earners = participants.filter((p) => p.share > 0);
     if (!earners.length) {
       return ui.notifications.warn(game.i18n.localize("LOOT_SPLITTER.Warnings.NoShares"));
     }
 
-    /** @type {Map<string, {actor: Actor, gold: number, items: object[]}>} */
+    /** @type {Map<string, {actor: Actor, currency: Object<string, number>, items: object[]}>} */
     const assignments = new Map(
-      participants.map((p) => [p.id, { actor: game.actors.get(p.id), gold: 0, items: [] }])
+      participants.map((p) => [p.id, { actor: game.actors.get(p.id), currency: {}, items: [] }])
     );
 
-    // --- Gold: proportional to shares; remainder goes by largest fractional part.
-    if (this.gold > 0) {
-      const totalShares = earners.reduce((s, p) => s + p.share, 0);
-      const exact = earners.map((p) => (this.gold * p.share) / totalShares);
+    // --- Currency: every denomination splits proportionally to shares,
+    // remainder goes by largest fractional part.
+    const totalShares = earners.reduce((s, p) => s + p.share, 0);
+    for (const denom of CURRENCY_DENOMS) {
+      const amount = this.currency[denom] ?? 0;
+      if (amount <= 0) continue;
+      const exact = earners.map((p) => (amount * p.share) / totalShares);
       const base = exact.map(Math.floor);
-      const remainder = this.gold - base.reduce((a, b) => a + b, 0);
+      const remainder = amount - base.reduce((a, b) => a + b, 0);
       const byFraction = exact
         .map((v, i) => ({ i, frac: v - base[i] }))
         .sort((a, b) => b.frac - a.frac);
       for (let k = 0; k < remainder; k++) base[byFraction[k % byFraction.length].i] += 1;
       earners.forEach((p, i) => {
-        assignments.get(p.id).gold = base[i];
+        if (base[i] > 0) assignments.get(p.id).currency[denom] = base[i];
       });
     }
 
@@ -211,7 +218,6 @@ export class LootSplitterApp extends HandlebarsApplicationMixin(ApplicationV2) {
         assignments.get(targetId).items.push(entry);
       });
     } else {
-      const totalShares = earners.reduce((s, p) => s + p.share, 0);
       const current = new Map(earners.map((p) => [p.id, 0]));
       for (const entry of this.items) {
         let bestId = null;
@@ -229,12 +235,20 @@ export class LootSplitterApp extends HandlebarsApplicationMixin(ApplicationV2) {
     for (const [, a] of assignments) {
       if (!a.actor) continue;
 
-      if (a.gold > 0) {
-        const path = `system.currency.${denom}`;
-        if (foundry.utils.hasProperty(a.actor, path)) {
-          const current = Number(foundry.utils.getProperty(a.actor, path)) || 0;
-          await a.actor.update({ [path]: current + a.gold });
-        } else {
+      const currencyEntries = Object.entries(a.currency);
+      if (currencyEntries.length) {
+        const update = {};
+        let missing = false;
+        for (const [denom, amount] of currencyEntries) {
+          const path = `system.currency.${denom}`;
+          if (foundry.utils.hasProperty(a.actor, path)) {
+            update[path] = (Number(foundry.utils.getProperty(a.actor, path)) || 0) + amount;
+          } else {
+            missing = true;
+          }
+        }
+        if (Object.keys(update).length) await a.actor.update(update);
+        if (missing) {
           ui.notifications.warn(
             game.i18n.format("LOOT_SPLITTER.Warnings.NoCurrency", { name: a.actor.name })
           );
@@ -254,7 +268,7 @@ export class LootSplitterApp extends HandlebarsApplicationMixin(ApplicationV2) {
     // --- Log: chat + journal history.
     // NB: actions are invoked with this = app instance, so static private
     // helpers must be called through the class name (this.#x would TypeError).
-    const content = LootSplitterApp.#buildLogContent(assignments, denom);
+    const content = LootSplitterApp.#buildLogContent(assignments);
     await LootSplitterApp.#postChatLog(content);
     if (game.settings.get(MODULE_ID, "historyLog")) {
       try {
@@ -265,7 +279,7 @@ export class LootSplitterApp extends HandlebarsApplicationMixin(ApplicationV2) {
     }
 
     this.items = [];
-    this.gold = 0;
+    this.currency = Object.fromEntries(CURRENCY_DENOMS.map((d) => [d, 0]));
     this.render();
   }
 
@@ -274,11 +288,15 @@ export class LootSplitterApp extends HandlebarsApplicationMixin(ApplicationV2) {
   /* ------------------------------------------ */
 
   /** Build the shared HTML summary of a distribution. */
-  static #buildLogContent(assignments, denom) {
+  static #buildLogContent(assignments) {
     const entries = [];
     for (const [, a] of assignments) {
       if (!a.actor) continue;
-      const goldPart = a.gold > 0 ? ` — ${a.gold} ${denom}` : "";
+      const currencyText = Object.entries(a.currency)
+        .filter(([, v]) => v > 0)
+        .map(([k, v]) => `${v} ${k}`)
+        .join(", ");
+      const goldPart = currencyText ? ` — ${currencyText}` : "";
       const itemsPart = a.items.length
         ? `<ul>${a.items
             .map((i) => `<li><img src="${i.img}" alt="" width="20" height="20"> ${i.name}</li>`)

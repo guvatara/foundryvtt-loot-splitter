@@ -27,9 +27,14 @@
   </div>
 
   <div class="form-group">
-    <label>{{localize "LOOT_SPLITTER.App.Gold"}}</label>
-    <div class="form-fields">
-      <input type="number" name="gold" value="{{gold}}" min="0" step="1">
+    <label>{{localize "LOOT_SPLITTER.App.Currency"}}</label>
+    <div class="form-fields currency-row">
+      {{#each currencyFields}}
+      <label class="currency-field">
+        <span class="currency-label">{{this.key}}</span>
+        <input type="number" data-currency="{{this.key}}" value="{{this.value}}" min="0" step="1">
+      </label>
+      {{/each}}
     </div>
   </div>
 

@@ -20,15 +20,6 @@ Hooks.once("init", () => {
     default: "public"
   });
 
-  game.settings.register(MODULE_ID, "currencyDenomination", {
-    name: "LOOT_SPLITTER.Settings.Denomination.Name",
-    hint: "LOOT_SPLITTER.Settings.Denomination.Hint",
-    scope: "world",
-    config: true,
-    type: String,
-    default: "gp"
-  });
-
   game.settings.register(MODULE_ID, "historyLog", {
     name: "LOOT_SPLITTER.Settings.HistoryLog.Name",
     hint: "LOOT_SPLITTER.Settings.HistoryLog.Hint",
