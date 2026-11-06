@@ -28,11 +28,43 @@ Hooks.once("init", () => {
     type: String,
     default: "gp"
   });
+
+  registerLootCommand();
 });
 
 Hooks.once("ready", () => {
   game.lootSplitter = { app: null };
 });
+
+/* ------------------------------------------ */
+/*  /loot chat command                         */
+/* ------------------------------------------ */
+
+/**
+ * Register the /loot chat command.
+ * v14+: native registration via ChatLog.CHAT_COMMANDS (intercepting unknown
+ *       commands through the chatMessage hook no longer works there).
+ * v12–13: fallback to the chatMessage hook.
+ */
+function registerLootCommand() {
+  const ChatLogClass = foundry?.applications?.sidebar?.tabs?.ChatLog ?? globalThis.ChatLog;
+
+  if (ChatLogClass?.CHAT_COMMANDS) {
+    ChatLogClass.CHAT_COMMANDS.loot = {
+      rgx: /^\/loot(?:\s+.*)?$/,
+      fn: async () => {
+        openLootSplitter();
+        return false; // do not create a chat message from the command itself
+      }
+    };
+  } else {
+    Hooks.on("chatMessage", (_chatLog, message, _chatData) => {
+      if (!/^\/loot(?:\s|$)/.test(message.trim())) return;
+      openLootSplitter();
+      return false;
+    });
+  }
+}
 
 /* ------------------------------------------ */
 /*  Scene control button                       */
