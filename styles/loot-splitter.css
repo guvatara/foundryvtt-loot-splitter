@@ -1,0 +1,131 @@
+/* Loot Splitter window */
+
+#loot-splitter .loot-splitter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+#loot-splitter .notes {
+  margin: 0;
+  font-size: var(--font-size-12, 12px);
+  opacity: 0.8;
+}
+
+#loot-splitter .drop-area {
+  border: 2px dashed var(--color-border-light-2, #999);
+  border-radius: 6px;
+  padding: 0.5rem;
+  min-height: 72px;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+#loot-splitter .drop-hint {
+  margin: 0;
+  text-align: center;
+  opacity: 0.6;
+  padding: 0.75rem 0;
+}
+
+#loot-splitter .loot-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+#loot-splitter .loot-item {
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.35rem;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.08);
+}
+
+#loot-splitter .loot-item-img {
+  width: 28px;
+  height: 28px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex: 0 0 auto;
+}
+
+#loot-splitter .loot-item-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#loot-splitter .loot-item-assign {
+  flex: 0 0 40%;
+}
+
+#loot-splitter .loot-item-remove {
+  flex: 0 0 auto;
+  width: 28px;
+  line-height: 1;
+}
+
+#loot-splitter fieldset.participants {
+  border: 1px solid var(--color-border-light-2, #999);
+  border-radius: 6px;
+  padding: 0.35rem 0.5rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+#loot-splitter .participant {
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+#loot-splitter .participant-img {
+  width: 22px;
+  height: 22px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+#loot-splitter .loot-footer {
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+#loot-splitter .loot-footer .distribute {
+  font-weight: bold;
+}
+
+/* Chat log card */
+
+.chat-message .loot-splitter-log h3 {
+  margin: 0 0 0.35rem;
+  border-bottom: 1px solid var(--color-border-light-2, #999);
+  padding-bottom: 0.25rem;
+}
+
+.chat-message .loot-splitter-entry {
+  margin: 0.25rem 0;
+}
+
+.chat-message .loot-splitter-entry ul {
+  list-style: none;
+  margin: 0.15rem 0 0.15rem 0.75rem;
+  padding: 0;
+}
+
+.chat-message .loot-splitter-entry li {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.chat-message .loot-splitter-entry li img {
+  border-radius: 3px;
+}

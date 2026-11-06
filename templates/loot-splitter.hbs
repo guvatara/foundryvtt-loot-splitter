@@ -1,0 +1,64 @@
+<div class="loot-splitter">
+  <p class="notes">{{localize "LOOT_SPLITTER.App.Hint"}}</p>
+
+  <div class="drop-area" data-drop-area>
+    {{#if items.length}}
+    <ul class="loot-items">
+      {{#each items}}
+      <li class="loot-item flexrow">
+        <img class="loot-item-img" src="{{this.img}}" alt="{{this.name}}">
+        <span class="loot-item-name">{{this.name}}</span>
+        {{#if ../isManual}}
+        <select class="loot-item-assign" data-assign="{{this.id}}"
+                title="{{localize 'LOOT_SPLITTER.App.AssignTo'}}">
+          {{selectOptions ../participantOptions valueAttr="value" labelAttr="label" selected=this.assigned}}
+        </select>
+        {{/if}}
+        <button type="button" class="loot-item-remove" data-action="removeItem"
+                data-item-id="{{this.id}}" title="{{localize 'LOOT_SPLITTER.App.Remove'}}">
+          <i class="fas fa-times"></i>
+        </button>
+      </li>
+      {{/each}}
+    </ul>
+    {{else}}
+    <p class="drop-hint"><i class="fas fa-hand-holding"></i> {{localize "LOOT_SPLITTER.App.DropHere"}}</p>
+    {{/if}}
+  </div>
+
+  <div class="form-group">
+    <label>{{localize "LOOT_SPLITTER.App.Gold"}}</label>
+    <div class="form-fields">
+      <input type="number" name="gold" value="{{gold}}" min="0" step="1">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label>{{localize "LOOT_SPLITTER.App.Mode"}}</label>
+    <div class="form-fields">
+      <select name="mode">
+        {{selectOptions modeChoices selected=mode}}
+      </select>
+    </div>
+  </div>
+
+  <fieldset class="participants">
+    <legend>{{localize "LOOT_SPLITTER.App.Participants"}}</legend>
+    {{#each participants}}
+    <label class="participant flexrow">
+      <input type="checkbox" data-participant="{{this.id}}" {{checked this.selected}}>
+      <img class="participant-img" src="{{this.img}}" alt="">
+      <span>{{this.name}}</span>
+    </label>
+    {{/each}}
+  </fieldset>
+
+  <footer class="loot-footer flexrow">
+    <button type="button" data-action="clearAll">
+      <i class="fas fa-trash"></i> {{localize "LOOT_SPLITTER.App.Clear"}}
+    </button>
+    <button type="button" class="distribute" data-action="distribute">
+      <i class="fas fa-coins"></i> {{localize "LOOT_SPLITTER.App.Distribute"}}
+    </button>
+  </footer>
+</div>

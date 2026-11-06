@@ -1,0 +1,45 @@
+{
+  "LOOT_SPLITTER": {
+    "App": {
+      "Title": "Loot Splitter",
+      "Hint": "Drag items from the sidebar, a compendium or a character sheet into the area below, set the gold amount, choose recipients and distribute.",
+      "DropHere": "Drag items here",
+      "Gold": "Gold to split",
+      "Mode": "Distribution mode",
+      "Participants": "Recipients",
+      "Distribute": "Distribute",
+      "Clear": "Clear",
+      "Remove": "Remove item",
+      "AssignTo": "Assign to"
+    },
+    "Mode": {
+      "Even": "Split evenly between everyone",
+      "Manual": "Manual assignment"
+    },
+    "Controls": {
+      "Title": "Loot Splitter"
+    },
+    "Chat": {
+      "Alias": "Loot Splitter",
+      "Header": "Loot distributed"
+    },
+    "Warnings": {
+      "NoParticipants": "Select at least one recipient.",
+      "NothingToDistribute": "Add items or gold first.",
+      "NoCurrency": "{{name}} has no currency field — gold was not added.",
+      "OnlyGM": "Only the GM can split loot."
+    },
+    "Settings": {
+      "LogMode": {
+        "Name": "Chat log",
+        "Hint": "Who can see the loot distribution message in chat.",
+        "Public": "Public message",
+        "GM": "Whisper to GMs only"
+      },
+      "Denomination": {
+        "Name": "Currency denomination",
+        "Hint": "Currency key in actor data used for gold (for dnd5e: gp, pp, ep, sp, cp)."
+      }
+    }
+  }
+}
