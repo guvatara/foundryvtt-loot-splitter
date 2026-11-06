@@ -258,10 +258,16 @@ export class LootSplitterApp extends HandlebarsApplicationMixin(ApplicationV2) {
       speaker: { alias: game.i18n.localize("LOOT_SPLITTER.Chat.Alias") },
       content
     };
+    const createOptions = {};
     if (game.settings.get(MODULE_ID, "logMode") === "gm") {
-      // ChatMessage.getWhisperRecipients is deprecated; collect GM ids directly (v13/v14-safe).
-      messageData.whisper = game.users.filter((u) => u.isGM).map((u) => u.id);
+      if (foundry.utils.isNewerVersion(game.version, "13")) {
+        // v14+: recommended option ("public" | "gm" | "blind" | "self").
+        createOptions.messageMode = "gm";
+      } else {
+        // v12–v13: deprecated-but-working whisper field.
+        messageData.whisper = game.users.filter((u) => u.isGM).map((u) => u.id);
+      }
     }
-    await ChatMessage.create(messageData);
+    await ChatMessage.create(messageData, createOptions);
   }
 }
